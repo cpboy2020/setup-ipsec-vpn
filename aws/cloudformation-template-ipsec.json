@@ -2,33 +2,23 @@
     "AWSTemplateFormatVersion": "2010-09-09",
     "Mappings": {
         "OS": {
-            "Ubuntu1604": {
-                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                "InstallationLinks": "https://git.io/vpnsetup"
-            },
             "Ubuntu1804": {
-                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                "InstallationLinks": "https://git.io/vpnsetup"
+                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n"
             },
             "Ubuntu2004": {
-                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                "InstallationLinks": "https://git.io/vpnsetup"
+                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n"
             },
             "Debian9": {
-                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                "InstallationLinks": "https://git.io/vpnsetup"
+                "HelperInstallationCommands": "export DEBIAN_FRONTEND=noninteractive\napt-get -yq update\napt-get -yq install python3-pip\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n"
             },
             "CentOS7": {
-                "HelperInstallationCommands": "yum -y install python3 wget\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                "InstallationLinks": "https://git.io/vpnsetup-centos"
+                "HelperInstallationCommands": "yum -y install python3 wget\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n"
             },
             "CentOS8": {
-                "HelperInstallationCommands": "yum -y install python3 wget\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                "InstallationLinks": "https://git.io/vpnsetup-centos"
+                "HelperInstallationCommands": "yum -y install python3 wget\npython3 -m pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n"
             },
             "AmazonLinux2": {
-                "HelperInstallationCommands": "export PATH=\"$PATH:/opt/aws/bin\"\n",
-                "InstallationLinks": "https://git.io/vpnsetup-amzn"
+                "HelperInstallationCommands": "export PATH=\"$PATH:/opt/aws/bin\"\n"
             }
         }
     },
@@ -291,7 +281,12 @@
                 "CidrBlock": "10.0.0.0/24",
                 "MapPublicIpOnLaunch": true,
                 "AvailabilityZone": {
-                    "Fn::Sub": "${AWS::Region}a"
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Fn::GetAZs": ""
+                        }
+                    ]
                 }
             },
             "Metadata": {
@@ -392,17 +387,7 @@
                                     "Ref": "VpnPassword"
                                 },
                                 "'\n",
-                                "wget -t 3 -T 30 -nv -O vpn.sh ",
-                                {
-                                    "Fn::FindInMap": [
-                                        "OS",
-                                        {
-                                            "Ref": "OS"
-                                        },
-                                        "InstallationLinks"
-                                    ]
-                                },
-                                "\n",
+                                "wget -t 3 -T 30 -nv -O vpn.sh https://git.io/vpnsetup\n",
                                 "sh vpn.sh\n",
                                 "cfn-signal -e 0 ",
                                 " --stack ",
@@ -431,7 +416,12 @@
                     "Ref": "VpnSubnet"
                 },
                 "AvailabilityZone": {
-                    "Fn::Sub": "${AWS::Region}a"
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Fn::GetAZs": ""
+                        }
+                    ]
                 },
                 "InstanceType": {
                     "Ref": "InstanceType"
@@ -507,7 +497,12 @@
             "Type": "AWS::EC2::Volume",
             "Properties": {
                 "AvailabilityZone": {
-                    "Fn::Sub": "${AWS::Region}a"
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Fn::GetAZs": ""
+                        }
+                    ]
                 },
                 "Size": 8
             },
@@ -651,21 +646,14 @@
                                 "       regionName = event['ResourceProperties']['Region']",
                                 "       distribution = event['ResourceProperties']['Distribution']",
                                 "       ec2 = boto3.client('ec2',regionName)",
-                                "       AMIName = ''",
-                                "       if distribution == 'Ubuntu1604':",
-                                "           AMIName = 'ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*'",
-                                "       elif distribution == 'Ubuntu1804':",
-                                "           AMIName = 'ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*'",
-                                "       elif distribution == 'Ubuntu2004':",
-                                "           AMIName = 'ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*'",
-                                "       elif distribution == 'Debian9':",
-                                "           AMIName = 'debian-stretch-hvm-x86_64-gp2-*'",
-                                "       elif distribution == 'CentOS7':",
-                                "           AMIName = 'CentOS 7.9.2009 x86_64'",
-                                "       elif distribution == 'CentOS8':",
-                                "           AMIName = 'CentOS 8.3.2011 x86_64'",
-                                "       elif distribution == 'AmazonLinux2':",
-                                "           AMIName = 'amzn2-ami-hvm-*.*-x86_64-gp2'",
+                                "       AMIName = {",
+                                "           'Ubuntu1804': 'ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*',",
+                                "           'Ubuntu2004': 'ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*',",
+                                "           'Debian9': 'debian-stretch-hvm-x86_64-gp2-*',",
+                                "           'CentOS7': 'CentOS 7.9.2009 x86_64',",
+                                "           'CentOS8': 'CentOS 8.3.2011 x86_64',",
+                                "           'AmazonLinux2': 'amzn2-ami-hvm-*.*-x86_64-gp2',",
+                                "       }[distribution]",
                                 "       response = ec2.describe_images(Filters=[{'Name':'name', 'Values':[AMIName]}], Owners=['099720109477', '379101102735', '125523088429', 'amazon'])",
                                 "       images = response['Images']",
                                 "       images.sort(key=creation_date,reverse=True)",
@@ -815,7 +803,6 @@
             "AllowedValues": [
                 "Ubuntu2004",
                 "Ubuntu1804",
-                "Ubuntu1604",
                 "Debian9",
                 "CentOS7",
                 "CentOS8",
